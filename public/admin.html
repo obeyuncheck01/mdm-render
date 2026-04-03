@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MDM Admin Panel</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: #f0f2f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            max-width: 400px;
+            margin: 100px auto;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        .login-box h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #5a67d8;
+        }
+        .logout-btn {
+            background: #e53e3e;
+            width: auto;
+            float: right;
+            padding: 8px 16px;
+        }
+        .logout-btn:hover {
+            background: #c53030;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .refresh-btn {
+            background: #667eea;
+            width: auto;
+            padding: 10px 20px;
+            margin-bottom: 20px;
+        }
+        .device-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 20px;
+        }
+        .device-card {
+            background: white;
+            border-radius: 12px;
+            padding: 18px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 4px solid #667eea;
+        }
+        .device-card.paid {
+            border-left-color: #48bb78;
+        }
+        .device-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .device-id {
+            font-size: 11px;
+            color: #888;
+            font-family: monospace;
+            margin-bottom: 10px;
+        }
+        .device-info {
+            font-size: 14px;
+            line-height: 1.6;
+            margin: 10px 0;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-top: 8px;
+        }
+        .status-active {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        .status-paid {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+        .button-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .btn-lock {
+            background: #e53e3e;
+            color: white;
+        }
+        .btn-locate {
+            background: #ed8936;
+            color: white;
+        }
+        .btn-wipe {
+            background: #2d3748;
+            color: white;
+        }
+        .btn-paid {
+            background: #48bb78;
+            color: white;
+        }
+        .last-seen {
+            font-size: 11px;
+            color: #888;
+            margin-top: 12px;
+            padding-top: 8px;
+            border-top: 1px solid #eee;
+        }
+        .clearfix::after {
+            content: "";
+            clear: both;
+            display: table;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <!-- Login Container -->
+    <div class="container" id="loginContainer" style="display:none;">
+        <div class="login-box">
+            <h2>🔐 MDM Admin Login</h2>
+            <input type="text" id="username" placeholder="Username" value="admin">
+            <input type="password" id="password" placeholder="Password" value="admin123">
+            <button onclick="login()">Login</button>
+        </div>
+    </div>
+
+    <!-- Panel Container -->
+    <div class="container" id="panelContainer" style="display:none;">
+        <div class="header clearfix">
+            <h1>📱 MDM Control Panel</h1>
+            <p>Manage your devices remotely</p>
+            <button class="logout-btn btn" onclick="logout()">Logout</button>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalDevices">0</div>
+                <div class="stat-label">Total Devices</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="activeDevices">0</div>
+                <div class="stat-label">Active (24h)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="paidDevices">0</div>
+                <div class="stat-label">Paid</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="lockedDevices">0</div>
+                <div class="stat-label">Locked</div>
+            </div>
+        </div>
+
+        <button class="refresh-btn btn" onclick="loadDevices()">🔄 Refresh Devices</button>
+        <div id="deviceGrid" class="device-grid">Loading...</div>
+    </div>
+</div>
+
+<script>
+    // Automatically detect API URL (works on Railway, Render, etc.)
+    const API_URL = window.location.origin;
+    let isLoggedIn = false;
+
+    function checkLogin() {
+        const logged = localStorage.getItem('mdm_logged_in');
+        if (logged === 'true') {
+            showPanel();
+            loadDevices();
+            setInterval(loadDevices, 15000);
+        } else {
+            showLogin();
+        }
+    }
+
+    function showLogin() {
+        document.getElementById('loginContainer').style.display = 'block';
+        document.getElementById('panelContainer').style.display = 'none';
+    }
+
+    function showPanel() {
+        document.getElementById('loginContainer').style.display = 'none';
+        document.getElementById('panelContainer').style.display = 'block';
+    }
+
+    async function login() {
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        
+        try {
+            const response = await fetch(`${API_URL}/api/admin/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await response.json();
+            if (data.success) {
+                localStorage.setItem('mdm_logged_in', 'true');
+                showPanel();
+                loadDevices();
+                setInterval(loadDevices, 15000);
+            } else {
+                alert('Invalid credentials');
+            }
+        } catch(e) {
+            alert('Connection error: ' + e.message);
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem('mdm_logged_in');
+        showLogin();
+    }
+
+    async function loadDevices() {
+        try {
+            const response = await fetch(`${API_URL}/api/devices`);
+            const data = await response.json();
+            renderDevices(data.devices || []);
+            updateStats(data.devices || []);
+        } catch(e) {
+            document.getElementById('deviceGrid').innerHTML = '<div class="loading">❌ Error loading devices. Make sure server is running.</div>';
+        }
+    }
+
+    function updateStats(devices) {
+        document.getElementById('totalDevices').innerText = devices.length;
+        const active = devices.filter(d => new Date(d.last_seen) > new Date(Date.now() - 86400000)).length;
+        const paid = devices.filter(d => d.paid).length;
+        const locked = devices.filter(d => !d.paid && d.status !== 'blocked').length;
+        document.getElementById('activeDevices').innerText = active;
+        document.getElementById('paidDevices').innerText = paid;
+        document.getElementById('lockedDevices').innerText = locked;
+    }
+
+    async function sendCommand(deviceId, command) {
+        try {
+            const response = await fetch(`${API_URL}/api/send-command`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ deviceId, command })
+            });
+            const data = await response.json();
+            if (data.success) {
+                alert(`✅ Command "${command}" sent to device!`);
+            } else {
+                alert('❌ Failed: ' + data.error);
+            }
+        } catch(e) {
+            alert('❌ Error: ' + e.message);
+        }
+    }
+
+    async function markPaid(deviceId) {
+        if (!confirm('💰 Mark this device as PAID?\n\nUser will be able to uninstall the MDM app.')) return;
+        try {
+            const response = await fetch(`${API_URL}/api/mark-paid`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ deviceId })
+            });
+            const data = await response.json();
+            if (data.success) {
+                alert('✅ Device marked as paid!');
+                loadDevices();
+            }
+        } catch(e) {
+            alert('❌ Error: ' + e.message);
+        }
+    }
+
+    function renderDevices(devices) {
+        const grid = document.getElementById('deviceGrid');
+        if (devices.length === 0) {
+            grid.innerHTML = '<div class="loading">📭 No devices enrolled yet. Install the MDM app on a device.</div>';
+            return;
+        }
+
+        grid.innerHTML = devices.map(device => {
+            let statusClass = '';
+            let statusText = '';
+            if (device.paid) {
+                statusClass = 'status-paid';
+                statusText = '✅ PAID - Can uninstall';
+            } else {
+                statusClass = 'status-active';
+                statusText = '🔒 LOCKED - Cannot uninstall';
+            }
+
+            const lastSeen = new Date(device.last_seen);
+            const isOnline = (new Date() - lastSeen) < 60000;
+
+            return `
+                <div class="device-card ${device.paid ? 'paid' : ''}">
+                    <div class="device-name">📱 ${escapeHtml(device.name || 'Unknown Device')}</div>
+                    <div class="device-id">ID: ${escapeHtml(device.id)}</div>
+                    <div class="device-info">
+                        📱 Model: ${escapeHtml(device.model || 'Unknown')}<br>
+                        🤖 Android: ${escapeHtml(device.android_version || 'Unknown')}<br>
+                        🔋 Battery: ${device.battery || 'N/A'}%<br>
+                        📍 Location: ${escapeHtml(device.location || 'Unknown')}<br>
+                        ${isOnline ? '🟢 Online' : '⚫ Offline'}<br>
+                        <span class="status-badge ${statusClass}">${statusText}</span>
+                    </div>
+                    <div class="button-group">
+                        <button class="btn btn-lock" onclick="sendCommand('${device.id}', 'lock')">🔒 Lock</button>
+                        <button class="btn btn-locate" onclick="sendCommand('${device.id}', 'locate')">📍 Locate</button>
+                        <button class="btn btn-wipe" onclick="if(confirm('⚠️ This will FACTORY RESET the device! Continue?')) sendCommand('${device.id}', 'wipe')">💀 Wipe</button>
+                        ${!device.paid ? `<button class="btn btn-paid" onclick="markPaid('${device.id}')">💰 Mark Paid</button>` : ''}
+                    </div>
+                    <div class="last-seen">Last seen: ${lastSeen.toLocaleString()}</div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    checkLogin();
+</script>
+</body>
+</html>
